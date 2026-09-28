@@ -87,8 +87,8 @@ def main():
 
     # ---------- 3. 异常检测 ----------
     sales_series = byd_only.set_index("month")["sales"]
-    stat_det = StatisticalAnomalyDetector()
-    ts_det = TimeSeriesAnomalyDetector()
+    stat_det = StatisticalAnomalyDetector(method="zscore", threshold=1.5)
+    ts_det = TimeSeriesAnomalyDetector(method="rolling", threshold=1.5)
     z_anom = stat_det.detect(sales_series)
     roll_anom = ts_det.detect(sales_series)
 
@@ -106,9 +106,9 @@ def main():
     <div class="insight">
     <p><strong>异常检测结论：</strong></p>
     <ul>
-        <li>共检出 <strong>{len(anom_filtered)}</strong> 个异常月份，其中 2026-01 被两种方法同时判定为异常（综合得分 2/2）。</li>
-        <li>2026-01 异常模式：销量 68,585 辆，远低于滚动均值，符合春节假期 + 去年高基数的"季节性+事件性"复合异常。</li>
-        <li>建议：将 1-2 月纳入"春节效应"专用规则，其余月份用统计 Z-score + 时序滚动组合监控，替代纯人工阈值。</li>
+        <li>共检出 <strong>{len(anom_filtered)}</strong> 个异常月份：{', '.join(anom_filtered['日期'].tolist())}。</li>
+        <li>2026-01/02 为春节低谷异常（销量约 6.9 万辆，远低于均值）；2025-09 为高基数峰值异常（31.3 万辆）。</li>
+        <li>建议：将 1-2 月纳入"春节效应"专用规则，其余月份用 Z-score(阈值1.5) + 滚动时序组合监控，替代纯人工阈值。</li>
     </ul>
     </div>"""
     anomaly_body += anomaly_insight
@@ -267,8 +267,9 @@ footer {{ margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; color
 - 2026年1月断崖式下跌后逐月回升，8月恢复至 18.4 万辆。
 
 ## 三、异常检测
-- 检出 {len(anom_filtered)} 个异常月份，2026-01 被三种方法同时判定异常。
-- 建议将春节月纳入专用规则，其余月份用滚动 Z-score + IQR 组合监控。
+- 共检出 **{len(anom_filtered)}** 个异常月份：{", ".join(anom_filtered["日期"].tolist())}
+- 2026-01/02 为春节低谷异常，2025-09 为高基数峰值异常
+- 建议将春节月（1-2月）纳入专用规则，其余月份用 Z-score + 滚动时序组合监控
 
 ## 四、归因结论
 - 8月增量主要由 {model_contrib.iloc[0]['车系']}（{model_contrib.iloc[0]['贡献率']}）和 {model_contrib.iloc[1]['车系']}（{model_contrib.iloc[1]['贡献率']}）拉动。

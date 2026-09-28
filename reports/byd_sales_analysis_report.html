@@ -133,14 +133,35 @@ footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; color:
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td>2025-09</td>
+      <td>313167</td>
+      <td>True</td>
+      <td>False</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>2026-01</td>
+      <td>68585</td>
+      <td>True</td>
+      <td>False</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>2026-02</td>
+      <td>68623</td>
+      <td>True</td>
+      <td>False</td>
+      <td>1</td>
+    </tr>
   </tbody>
 </table>
     <div class="insight">
     <p><strong>异常检测结论：</strong></p>
     <ul>
-        <li>共检出 <strong>0</strong> 个异常月份，其中 2026-01 被两种方法同时判定为异常（综合得分 2/2）。</li>
-        <li>2026-01 异常模式：销量 68,585 辆，远低于滚动均值，符合春节假期 + 去年高基数的"季节性+事件性"复合异常。</li>
-        <li>建议：将 1-2 月纳入"春节效应"专用规则，其余月份用统计 Z-score + 时序滚动组合监控，替代纯人工阈值。</li>
+        <li>共检出 <strong>3</strong> 个异常月份：2025-09, 2026-01, 2026-02。</li>
+        <li>2026-01/02 为春节低谷异常（销量约 6.9 万辆，远低于均值）；2025-09 为高基数峰值异常（31.3 万辆）。</li>
+        <li>建议：将 1-2 月纳入"春节效应"专用规则，其余月份用 Z-score(阈值1.5) + 滚动时序组合监控，替代纯人工阈值。</li>
     </ul>
     </div></section>
 <section><h2>四、多维归因分析</h2><h4>车系贡献度排名（7月→8月增量）</h4><table class="dataframe data-table">
