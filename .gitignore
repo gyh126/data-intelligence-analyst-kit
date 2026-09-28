@@ -39,7 +39,6 @@ data/processed/*
 
 # Logs and reports
 *.log
-reports/*.html
 reports/*.pdf
 
 # Trae internal
