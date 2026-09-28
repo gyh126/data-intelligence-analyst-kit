@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "data-intelligence-analyst-kit"
+version = "0.1.0"
+description = "数据智能分析引擎：数据建模 · 异常检测 · 智能归因 · LLM Agent — 面向数据科学/AI 分析岗的全链路工具集"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [{name = "Data Intelligence Team"}]
+keywords = ["data-science", "anomaly-detection", "attribution", "causal-inference", "llm-agent", "business-analytics"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "scikit-learn>=1.3.0",
+    "xgboost>=2.0.0",
+    "statsmodels>=0.14.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "plotly>=5.17.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.65.0",
+    "joblib>=1.3.0",
+]
+
+[project.optional-dependencies]
+causal = ["dowhy>=0.11", "causal-learn>=0.1.3"]
+llm = ["openai>=1.3.0", "langchain>=0.1.0", "langchain-core>=0.1.0"]
+dashboard = ["streamlit>=1.28.0"]
+forecast = ["prophet>=1.1.5"]
+dev = ["pytest>=7.4.0", "pytest-cov>=4.1.0", "jupyter>=1.0.0", "ipykernel>=6.25.0"]
+all = ["data-intelligence-analyst-kit[causal,llm,dashboard,forecast,dev]"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

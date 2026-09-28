@@ -1,0 +1,33 @@
+# 数据智能分析引擎配置
+
+# 异常检测默认参数
+anomaly:
+  sigma_k: 3
+  iqr_k: 1.5
+  zscore_threshold: 3.0
+  rolling_window: 7
+  stl_period: 7
+  contamination: 0.05
+
+# 归因分析默认参数
+attribution:
+  anomaly_threshold: 0.2    # 波动检测阈值（环比变化率）
+  alpha: 0.05               # 假设检验显著性水平
+  drill_down_top_n: 3       # 下钻每层取 Top-N
+
+# 建模默认参数
+modeling:
+  arima_order: [1, 1, 1]
+  ma_window: 3
+  forecast_steps: 3
+
+# LLM 配置
+llm:
+  provider: mock            # mock | openai
+  model: gpt-4o-mini
+  # api_key_env: OPENAI_API_KEY
+
+# 数据
+data:
+  seed: 42
+  multi_dim_months: 12
