@@ -126,6 +126,45 @@ print(report)
 streamlit run src/dashboard/app.py
 ```
 
+## 🔧 通用数据分析（支持任意数据源）
+
+项目核心分析引擎**与具体业务解耦**，可用于任意类型的数据分析。只需一行命令，自动完成 **数据获取 → 探索 → 异常检测 → 归因 → 预测 → 报告**。
+
+### 方式一：从本地 CSV 分析
+
+```bash
+# 自动推断指标列/时间列/维度列
+python scripts/run_analysis.py --csv your_data.csv
+
+# 或手动指定
+python scripts/run_analysis.py --csv your_data.csv --metric 销售额 --time 日期 --dims 产品,地区
+```
+
+### 方式二：从火山引擎专业数据集检索并分析
+
+```bash
+export PRO_DATASET_API_KEY=hqd_sk_xxx
+
+# 任意查询语句，支持汽车/股票/宏观/工商/学术等领域
+python scripts/run_analysis.py --query "贵州茅台 近一年股价" --metric 收盘价 --time 日期
+python scripts/run_analysis.py --query "2026年8月中国新能源汽车销量" --metric value --time time_raw
+python scripts/run_analysis.py --query "比亚迪 分车系销量" --metric 销量 --time 月份 --dims 车系,网络
+```
+
+### 输出内容
+
+每个分析任务会在输出目录生成：
+
+| 文件 | 内容 |
+|------|------|
+| `trend.png` | 指标趋势图 |
+| `anomaly.png` | 异常检测结果（Z-score） |
+| `dimension.png` | 维度分布 Top 10 |
+| `forecast.png` | 未来 3 期预测（Holt-Winters） |
+| `report.md` | 综合分析报告 |
+
+> 专业数据集覆盖：汽车销量、股票金融、宏观经济、企业工商、企业风险、学术文献等领域。
+
 ## 📊 数据源
 
 项目内置来自 **火山引擎「专业数据集」** 的真实业务数据：
