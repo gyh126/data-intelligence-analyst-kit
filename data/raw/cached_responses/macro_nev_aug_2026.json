@@ -1,0 +1,15 @@
+{
+  "code": 0,
+  "msg": "success",
+  "dataset_type": "macro",
+  "query": "2026年8月中国新能源汽车销量",
+  "items": [
+    {
+      "dataset_name": "新能源汽车",
+      "indicator_name": "新能源汽车:销量:当月值",
+      "time_raw": "2026-08-31",
+      "value": 1643000.0,
+      "unit_raw": "辆"
+    }
+  ]
+}

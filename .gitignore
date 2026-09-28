@@ -28,6 +28,7 @@ env/
 # Data (processed data is generated, raw may contain sensitive data)
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/cached_responses/
 data/processed/*
 !data/processed/.gitkeep
 !data/processed/*.csv

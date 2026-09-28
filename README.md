@@ -75,7 +75,21 @@ streamlit run src/dashboard/app.py
 - 多维增强数据（车型 × 区域 × 渠道）用于归因分析演示
 - 日级销量时序（含节假日/周末效应）用于异常检测
 
-如需获取最新数据，在 TRAE 中授权专业数据集插件后，通过 `dataPro_search` 工具检索并替换 `src/utils/data_loader.py` 中的数据。
+### 获取最新数据（在线模式）
+
+项目提供 `ProDatasetClient` Python 客户端，可在 Notebook/脚本中直接调用专业数据集 API：
+
+```python
+from utils import ProDatasetClient
+
+client = ProDatasetClient(api_key="hqd_sk_xxx")  # 或设置 PRO_DATASET_API_KEY
+result = client.search("比亚迪 近一年全国销量趋势")
+print(result.to_dataframe())
+```
+
+Notebook `07_pro_dataset_end_to_end.ipynb` 支持**在线/离线双模式**：
+- 有 `PRO_DATASET_API_KEY` 环境变量 → 在线调用真实 API
+- 无 Key → 自动回退到 `data/raw/cached_responses/` 中的缓存 JSON（已包含真实数据）
 
 ## 📚 Notebooks 演示
 

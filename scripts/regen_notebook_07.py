@@ -1,0 +1,202 @@
+"""重新生成 07_pro_dataset_end_to_end.ipynb，支持在线/离线双模式"""
+import json
+from pathlib import Path
+
+import nbformat as nbf
+
+NB_DIR = Path(__file__).resolve().parent.parent / "notebooks"
+
+
+def md(source: str):
+    return nbf.v4.new_markdown_cell(source)
+
+
+def code(source: str):
+    return nbf.v4.new_code_cell(source)
+
+
+cells = [
+    md(
+        "# 07. 火山引擎专业数据集 — 端到端示例\n\n"
+        "本 Notebook 演示如何通过火山引擎「专业数据集」获取真实业务数据，并完成端到端分析。\n\n"
+        "## 两种运行模式\n\n"
+        "- **在线模式**：通过 `ProDatasetClient` 直接调用专业数据集 HTTP API，需要 API Key\n"
+        "- **离线模式**：使用项目内置的缓存 JSON 数据（已通过专业数据集获取），无需 API Key\n\n"
+        "## 获取 API Key\n\n"
+        "1. 登录 [火山引擎控制台](https://console.volcengine.com/high-quality-dataset/data-application/pro-dataset)\n"
+        "2. 开通「专业数据集」服务并获取 API Key（形如 `hqd_sk_xxx`）\n"
+        "3. 设置环境变量：`export PRO_DATASET_API_KEY=hqd_sk_xxx`"
+    ),
+    md("## 1. 环境准备"),
+    code(
+        "import sys; sys.path.insert(0, '../src')\n"
+        "import os\n"
+        "import json\n"
+        "import pandas as pd\n"
+        "from pathlib import Path\n\n"
+        "# 检查是否有 API Key\n"
+        "api_key = os.getenv('PRO_DATASET_API_KEY')\n"
+        "if api_key:\n"
+        "    mode = 'online'\n"
+        "    print(f'✅ 在线模式：检测到 PRO_DATASET_API_KEY（{api_key[:8]}...）')\n"
+        "else:\n"
+        "    mode = 'offline'\n"
+        "    print('⚠️  离线模式：未检测到 PRO_DATASET_API_KEY，将使用缓存数据')\n"
+        "    print('   设置环境变量 PRO_DATASET_API_KEY 可切换到在线模式')\n"
+        "\n"
+        "CACHE_DIR = Path('../data/raw/cached_responses')"
+    ),
+    md("## 2. 数据检索封装（在线 + 离线）"),
+    code(
+        "def search_data(query: str, cache_file: str = None):\n"
+        "    \"\"\"\n"
+        "    统一数据检索接口。\n"
+        "    - 在线模式：调用 ProDatasetClient\n"
+        "    - 离线模式：读取缓存 JSON\n"
+        "    \"\"\"\n"
+        "    if mode == 'online':\n"
+        "        from utils.pro_dataset_client import ProDatasetClient\n"
+        "        client = ProDatasetClient(api_key=api_key)\n"
+        "        result = client.search(query)\n"
+        "        if result.success:\n"
+        "            print(f'✅ 检索成功: dataset_type={result.dataset_type}')\n"
+        "            return result.raw\n"
+        "        else:\n"
+        "            print(f'❌ 检索失败: {result.msg}')\n"
+        "            if cache_file:\n"
+        "                print(f'   回退到缓存数据: {cache_file}')\n"
+        "    \n"
+        "    # 离线模式或在线失败回退\n"
+        "    if cache_file:\n"
+        "        cache_path = CACHE_DIR / cache_file\n"
+        "        if cache_path.exists():\n"
+        "            with open(cache_path, 'r', encoding='utf-8') as f:\n"
+        "                data = json.load(f)\n"
+        "            print(f'📦 使用缓存数据: {cache_file}')\n"
+        "            return data\n"
+        "    raise FileNotFoundError(f'缓存文件不存在: {cache_file}')"
+    ),
+    md("## 3. 检索比亚迪月度销量趋势"),
+    code(
+        "# 在线调用 dataPro_search 等价查询\n"
+        "result = search_data(\n"
+        "    query='比亚迪 近一年全国销量趋势',\n"
+        "    cache_file='byd_monthly_trend.json'\n"
+        ")\n"
+        "print(json.dumps(result, ensure_ascii=False, indent=2)[:600])"
+    ),
+    code(
+        "# 解析为 DataFrame\n"
+        "sales_data = result['items'][0]['销售数据']\n"
+        "byd_trend = pd.DataFrame(sales_data)\n"
+        "byd_trend['month'] = pd.to_datetime(byd_trend['时间'])\n"
+        "byd_trend['market_share'] = byd_trend['在售厂商份额'].str.rstrip('%').astype(float) / 100\n"
+        "byd_trend = byd_trend[['month', '销量', 'market_share', '在售厂商排名']]\n"
+        "byd_trend.columns = ['month', 'sales', 'market_share', 'rank']\n"
+        "display(byd_trend)"
+    ),
+    code(
+        "import matplotlib.pyplot as plt\n"
+        "fig, ax1 = plt.subplots(figsize=(12, 5))\n"
+        "ax1.bar(byd_trend['month'].dt.strftime('%Y-%m'), byd_trend['sales'], alpha=0.7, label='销量')\n"
+        "ax1.set_ylabel('销量')\n"
+        "ax2 = ax1.twinx()\n"
+        "ax2.plot(byd_trend['month'].dt.strftime('%Y-%m'), byd_trend['market_share'], 'r-o', label='市场份额')\n"
+        "ax2.set_ylabel('市场份额')\n"
+        "plt.title('比亚迪月度销量与市场份额（真实数据）')\n"
+        "plt.xticks(rotation=45)\n"
+        "plt.tight_layout()"
+    ),
+    md("## 4. 检索比亚迪 2026年8月分车系销量"),
+    code(
+        "result2 = search_data(\n"
+        "    query='比亚迪 2026年8月 各车系销量',\n"
+        "    cache_file='byd_aug_2026_models.json'\n"
+        ")\n"
+        "\n"
+        "# 解析销售网络数据\n"
+        "networks = result2['items'][0]['销售数据'][0]['销售网络']\n"
+        "rows = []\n"
+        "for net in networks:\n"
+        "    for car in net.get('车系', []):\n"
+        "        rows.append({'network': net['网络名称'], 'model': car['车系名称'], 'sales': car['本月销量']})\n"
+        "byd_models = pd.DataFrame(rows)\n"
+        "display(byd_models)"
+    ),
+    code(
+        "# 各网络销量占比\n"
+        "byd_models.groupby('network')['sales'].sum().plot(\n"
+        "    kind='pie', autopct='%1.1f%%', figsize=(8, 8), title='比亚迪 2026年8月 各网络销量占比'\n"
+        ")"
+    ),
+    md("## 5. 检索特斯拉数据并对比"),
+    code(
+        "result3 = search_data(\n"
+        "    query='特斯拉 2026年8月全国销量',\n"
+        "    cache_file='tesla_aug_2026.json'\n"
+        ")\n"
+        "tesla_data = result3['items'][0]['销售数据']\n"
+        "tesla_df = pd.DataFrame(tesla_data)\n"
+        "display(tesla_df)"
+    ),
+    md("## 6. 宏观数据：新能源汽车销量"),
+    code(
+        "result4 = search_data(\n"
+        "    query='2026年8月中国新能源汽车销量',\n"
+        "    cache_file='macro_nev_aug_2026.json'\n"
+        ")\n"
+        "macro_data = result4['items'][0]\n"
+        "print(f\"2026年8月中国新能源汽车销量: {macro_data['value']:,.0f} {macro_data['unit_raw']}\")"
+    ),
+    md("## 7. 端到端分析：比亚迪 vs 市场"),
+    code(
+        "# 比亚迪 8月零售量 vs 全国新能源汽车销量\n"
+        "byd_aug_retail = byd_trend[byd_trend['month'] == '2026-08-01']['sales'].values[0]\n"
+        "nev_aug_total = macro_data['value']\n"
+        "byd_share = byd_aug_retail / nev_aug_total * 100\n"
+        "\n"
+        "print(f'2026年8月:')\n"
+        "print(f'  比亚迪零售量: {byd_aug_retail:,} 辆')\n"
+        "print(f'  全国新能源汽车销量: {nev_aug_total:,.0f} 辆')\n"
+        "print(f'  比亚迪市占率: {byd_share:.1f}%')\n"
+        "print(f'  专业数据集返回市场份额: {byd_trend.iloc[-1][\"market_share\"]*100:.1f}%')"
+    ),
+    md("## 8. 在线模式进阶：自由查询\n\n"
+       "以下代码仅在**在线模式**下运行，可自由查询专业数据集的各类数据。"),
+    code(
+        "if mode == 'online':\n"
+        "    from utils.pro_dataset_client import ProDatasetClient\n"
+        "    client = ProDatasetClient(api_key=api_key)\n"
+        "    \n"
+        "    # 示例：查询学术文献\n"
+        "    r = client.search('时序异常检测 近2年论文')\n"
+        "    print(f'文献检索: {r.msg}, 共 {len(r.items)} 条')\n"
+        "    if r.items:\n"
+        "        print(json.dumps(r.items[0], ensure_ascii=False, indent=2)[:400])\n"
+        "else:\n"
+        "    print('当前为离线模式，跳过自由查询演示。')\n"
+        "    print('设置 PRO_DATASET_API_KEY 环境变量后重新运行即可体验在线检索。')"
+    ),
+    md("## 小结\n\n"
+       "本 Notebook 演示了如何通过火山引擎「专业数据集」获取真实业务数据：\n\n"
+       "1. **在线模式**：通过 `ProDatasetClient` 直接调用 `dataPro_search` 工具\n"
+       "2. **离线模式**：使用项目内置的缓存 JSON 数据\n"
+       "3. **统一接口**：`search_data()` 自动切换两种模式\n"
+       "4. **真实分析**：基于真实数据完成销量趋势、车系结构、市场份额分析\n\n"
+       "切换到在线模式只需设置环境变量：\n"
+       "```bash\n"
+       "export PRO_DATASET_API_KEY=hqd_sk_your_key_here\n"
+       "```"),
+]
+
+nb = nbf.v4.new_notebook()
+nb.cells = cells
+nb.metadata = {
+    "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+    "language_info": {"name": "python", "version": "3.10"},
+}
+
+out = NB_DIR / "07_pro_dataset_end_to_end.ipynb"
+with open(out, "w", encoding="utf-8") as f:
+    nbf.write(nb, f)
+print(f"✓ {out.name}")
